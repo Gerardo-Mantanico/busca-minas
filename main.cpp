@@ -10,14 +10,16 @@ void iniciar();
 void generar_minas();
 int verificar_minas(int, int);
 char matriz[6][6];
+char matrizB[6][6];
 char continuar='S';
+int pandera=8;
 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 int main() {
     iniciar();
     return 0;
 }
 
-void imprimir_tabla(char caracter, int tamano, int posicionx, int posiciony) {
+void imprimir_tabla(char caracter, int tamano, int posicionx, int posiciony, int tipo) {
     bool estado=false;
     SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
     for(int columna=0; columna<tamano;columna++) {
@@ -28,24 +30,35 @@ void imprimir_tabla(char caracter, int tamano, int posicionx, int posiciony) {
         printf("\n");
         for (int fila = 0; fila < tamano; fila++) {
             cout<<"   ";
-            if(matriz[posiciony][posicionx]=='*'){
+            if(tipo==2 ){
+                matrizB[posiciony][posicionx]='P';
+                matriz[posiciony][posicionx]='P';
+                pandera++;
+            }
+
+            if(matrizB[posiciony][posicionx]=='*'){
                 continuar='N';
                 estado=true;
                 imprimir_cuerpo(matriz[columna][fila]);
             }
             else{
-                //verificar_minas(posiciony,posicionx);
-               matriz[posiciony][posicionx]= '0'+verificar_minas(posiciony,posicionx);
-
-                if(matriz[columna][fila]!='*'){
-                    imprimir_cuerpo(matriz[columna][fila]);
+                matrizB[posiciony][posicionx]= matriz[posiciony][posicionx];
+                if(matrizB[columna][fila]!='*'){
+                    imprimir_cuerpo(matrizB[columna][fila]);
+                }
+                else if(matrizB[columna][fila]=='0'){
+                    int colum=columna;
+                    int fil=fila;
+                    for(columna-1;columna<=colum+1;columna++){
+                        for(fila-1;fila<=fil;fila++){
+                            matrizB[columna][fila]='0';
+                        }
+                    }
                 }
                 else {
                     imprimir_cuerpo(' ');
                 }
-
             }
-
         }
         printf("\n");
         for (int m = 0; m < tamano; m++) {
@@ -108,38 +121,18 @@ void generar_minas() {
         }
         else{
             matriz[fila_aleatorio][columna_aleatorio]='*';
+            matrizB[fila_aleatorio][columna_aleatorio]='*';
         }
         //cout<<"indice "<<i<<"  fila "<<fila_aleatorio<<"  columna  "<<columna_aleatorio<<"   " <<matriz[fila_aleatorio][columna_aleatorio]<<endl;
     }
-}
-
-void iniciar(){
-    cout << "Bien venido al juego de Busca Minas" <<endl;
-    generar_minas();
-    int posicionx;
-    int posiciony;
-    imprimir_tabla('X', 6, 7, 7);
-    while(continuar=='S') {
-        cout<<"Insertar numero de fila: ";
-        cin >>posiciony;
-        if(posiciony>6){
-            cout<<"Insertar numero  menor o igual a 6: ";
-            cin >>posiciony;
-        }
-        else{
-            cout<<"Insertar numero de columna: ";
-            cin >>posicionx;
-            if(posicionx<=6){
-                imprimir_tabla('x', 6, posicionx-1, posiciony-1);
-            }
-            else {
-                cout<<"Insertar numero  menor o igual a 6: ";
-                cin >>posicionx;
+    for(int y=0; y< size(matriz); y++){
+        for(int x=0; x< size(matriz); x++){
+            if(matriz[y][x]!='*'){
+                matriz[y][x]='0'+  verificar_minas(x,y);
             }
         }
     }
 }
-
 int verificar_minas(int fila, int columna){
     int numero_minas=0;
     int fila_inicio, fila_final, columna_inicio, columna_final;
@@ -156,6 +149,37 @@ int verificar_minas(int fila, int columna){
             }
         }
     }
-
     return numero_minas;
 }
+
+void iniciar(){
+    cout << "Bien venido al juego de Busca Minas" <<endl;
+    generar_minas();
+    int posicionx;
+    int posiciony;
+    int tipo;
+   imprimir_tabla('X', 6, 7, 7,1);
+    while(continuar=='S') {
+        cout<<"Insertar numero de fila: ";
+        cin >>posiciony;
+        if(posiciony>6){
+            cout<<"Insertar numero  menor o igual a 6: ";
+            cin >>posiciony;
+        }
+        else{
+            cout<<"Insertar numero de columna: ";
+            cin >>posicionx;
+            if(posicionx<=6){
+                cout<<"desea ingresar una bandera Si 2, No 1:  ";
+                cin>>tipo;
+                cout<<endl;
+                imprimir_tabla('x', 6, posicionx-1, posiciony-1,tipo);
+            }
+            else {
+                cout<<"Insertar numero  menor o igual a 6: ";
+                cin >>posicionx;
+            }
+        }
+    }
+}
+
