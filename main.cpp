@@ -9,6 +9,9 @@ void imprimir_tabla(char, int, int , int);
 void iniciar();
 void generar_minas();
 int verificar_minas(int, int);
+int contar_minas_adyacentes(int, int);
+void actualizar_numeros();
+bool matriz_llena();
 char matriz[6][6];
 char matrizB[6][6];
 char continuar='S';
@@ -47,11 +50,14 @@ void imprimir_tabla(char caracter, int tamano, int posicionx, int posiciony, int
                     imprimir_cuerpo(matrizB[columna][fila]);
                 }
                 else if(matrizB[columna][fila]=='0'){
-                    int colum=columna;
-                    int fil=fila;
-                    for(columna-1;columna<=colum+1;columna++){
-                        for(fila-1;fila<=fil;fila++){
-                            matrizB[columna][fila]='0';
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dy = -1; dy <= 1; dy++) {
+                            int nx = columna + dx;
+                            int ny = fila + dy;
+                            if (nx >= 0 && nx < tamano && ny >= 0 && ny < tamano && matrizB[nx][ny] == '0') {
+                                matrizB[nx][ny] = matriz[nx][ny];
+                                imprimir_cuerpo(matrizB[nx][ny]);
+                            }
                         }
                     }
                 }
@@ -69,6 +75,12 @@ void imprimir_tabla(char caracter, int tamano, int posicionx, int posiciony, int
     }
     if(estado==true){
         cout<<"Game Over!!!   "<<"En la fila: "<<posiciony+1<<" y en la columna: "<<posicionx+1<<" existia una mina";
+    }
+    else {
+        if( matriz_llena()==true){
+            cout<<"A GANADO USTED ES UN CRACK!!!!!";
+            continuar='N';
+        }
     }
     SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE| FOREGROUND_GREEN | FOREGROUND_BLUE);
 }
@@ -125,61 +137,74 @@ void generar_minas() {
         }
         //cout<<"indice "<<i<<"  fila "<<fila_aleatorio<<"  columna  "<<columna_aleatorio<<"   " <<matriz[fila_aleatorio][columna_aleatorio]<<endl;
     }
-    for(int y=0; y< size(matriz); y++){
-        for(int x=0; x< size(matriz); x++){
-            if(matriz[y][x]!='*'){
-                matriz[y][x]='0'+  verificar_minas(x,y);
-            }
-        }
-    }
-}
-int verificar_minas(int fila, int columna){
-    int numero_minas=0;
-    int fila_inicio, fila_final, columna_inicio, columna_final;
-    columna_final = columna + 1;
-    columna_inicio = columna - 1;
-    fila_final = fila + 1;
-    fila_inicio = fila - 1;
-    for (columna_inicio; columna_inicio <= columna_final; columna_inicio++) {
-        int fila_inicio_actual = fila_inicio; // Guarda el valor inicial de fila_inicio
-        int fila_final_actual = fila_final; // Guarda el valor inicial de fila_final
-        for (fila_inicio_actual; fila_inicio_actual <= fila_final_actual; fila_inicio_actual++) {
-            if(matriz[columna_inicio][fila_inicio_actual]=='*'){
-                numero_minas++;
-            }
-        }
-    }
-    return numero_minas;
+    actualizar_numeros();
 }
 
-void iniciar(){
-    cout << "Bien venido al juego de Busca Minas" <<endl;
+void iniciar() {
+    cout << "Bienvenido al juego de Busca Minas" << endl;
     generar_minas();
     int posicionx;
     int posiciony;
     int tipo;
-   imprimir_tabla('X', 6, 7, 7,1);
-    while(continuar=='S') {
-        cout<<"Insertar numero de fila: ";
-        cin >>posiciony;
-        if(posiciony>6){
-            cout<<"Insertar numero  menor o igual a 6: ";
-            cin >>posiciony;
+    imprimir_tabla('X', 6, 7, 7, 1);
+    while (continuar == 'S') {
+        cout << "Insertar numero de fila (1-6): ";
+        cin >> posiciony;
+        while (posiciony < 1 || posiciony > 6) {
+            cout << "Numero fuera de rango. Insertar numero de fila (1-6): ";
+            cin >> posiciony;
         }
-        else{
-            cout<<"Insertar numero de columna: ";
-            cin >>posicionx;
-            if(posicionx<=6){
-                cout<<"desea ingresar una bandera Si 2, No 1:  ";
-                cin>>tipo;
-                cout<<endl;
-                imprimir_tabla('x', 6, posicionx-1, posiciony-1,tipo);
-            }
-            else {
-                cout<<"Insertar numero  menor o igual a 6: ";
-                cin >>posicionx;
+        cout << "Insertar numero de columna (1-6): ";
+        cin >> posicionx;
+        while (posicionx < 1 || posicionx > 6) {
+            cout << "Numero fuera de rango. Insertar número de columna (1-6): ";
+            cin >> posicionx;
+        }
+        cout << "Desea ingresar una bandera? (Si: 2, No: 1): ";
+        cin >> tipo;
+        cout<<endl;
+        while(tipo>2 || tipo<1){
+            cout << "Desea ingresar una bandera? (Si: 2, No: 1): ";
+            cin >> tipo;
+            cout<<endl;
+        }
+        imprimir_tabla('x', 6, posicionx - 1, posiciony - 1, tipo);
+    }
+}
+
+void actualizar_numeros() {
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j <6; j++) {
+            if (matriz[i][j] != '*') {
+                int num_minas = contar_minas_adyacentes(i, j);
+                matriz[i][j] = num_minas + '0'; // Convertir el número a carácter
             }
         }
     }
 }
 
+int contar_minas_adyacentes(int fila, int columna) {
+    int contador = 0;
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            int nx = fila + dx;
+            int ny = columna + dy;
+            if (nx >= 0 && nx < 6 && ny >= 0 && ny <6) {
+                if (matriz[nx][ny] == '*') {
+                    contador++;
+                }
+            }
+        }
+    }
+    return contador;
+}
+bool matriz_llena() {
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 6; ++j) {
+            if (matrizB[i][j] == ' ') { // Si hay al menos una posición vacía, la matriz no está llena
+                return true;
+            }
+        }
+    }
+    return false; // Si no se encontró ninguna posición vacía, la matriz está llena
+}
